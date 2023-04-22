@@ -1,4 +1,5 @@
 import mailbox
+import threading
 
 import dateparser
 from bs4 import BeautifulSoup
@@ -6,9 +7,21 @@ from haystack import Document
 from tqdm import tqdm
 
 
-class GMailToText(object):
-    def __init__(self) -> None:
-        pass
+class GmailCapturer(threading.Thread):
+    def __init__(self, type="audio", subtype="whisper") -> None:
+        super().__init__()
+        self.type = type
+        self.subtype = subtype
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            pass
+
+    def stop(self):
+        self.running = False
+        self.join()
 
     def mbox_to_documents(self, path_to_mbox: str) -> str:
         mbox = mailbox.mbox(path_to_mbox)
@@ -33,11 +46,11 @@ class GMailToText(object):
             if subject is not None:
                 subject = subject.lower().split()
             return Document(
-                id=f"email_gmail_{message_id}",
+                id=f"{self.type}_{self.subtype}_{message_id}",
                 content=body,
                 meta={
-                    "source_type": "email",
-                    "source_subtype": "gmail",
+                    "source_type": self.type,
+                    "source_subtype": self.subtype,
                     "source_id": message_id,
                     "subject": subject,
                     "from": _from,
