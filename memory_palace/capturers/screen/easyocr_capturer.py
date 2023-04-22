@@ -1,3 +1,4 @@
+import logging
 import threading
 
 import cv2
@@ -5,12 +6,18 @@ import easyocr
 import numpy as np
 from PIL import ImageGrab
 
+from memory_palace.processors.haystack_processor import HaystackProcessor
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class EasyOCRCapturer(threading.Thread):
-    def __init__(self) -> None:
+    def __init__(self, processor = None, type="screen", subtype="easyocr") -> None:
         super().__init__()
         self.running = False
-        pass
+        if processor is None:
+            processor = HaystackProcessor()
+        self.processor = processor
 
     def run(self):
         self.running = True

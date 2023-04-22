@@ -5,11 +5,18 @@ import dateparser
 from bs4 import BeautifulSoup
 from haystack import Document
 from tqdm import tqdm
+from memory_palace.processors.haystack_processor import HaystackProcessor
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GmailCapturer(threading.Thread):
-    def __init__(self, type="audio", subtype="whisper") -> None:
+    def __init__(self, processor = None, type="audio", subtype="whisper") -> None:
         super().__init__()
+        if processor is None:
+            processor = HaystackProcessor()
+        self.processor = processor
         self.type = type
         self.subtype = subtype
         self.running = False
@@ -17,7 +24,7 @@ class GmailCapturer(threading.Thread):
     def run(self):
         self.running = True
         while self.running:
-            pass
+            #TODO: implement
 
     def stop(self):
         self.running = False

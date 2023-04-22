@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "mini-me"
+name = "memory-palace"
 version = "0.1.0"
 description = "The AI who shagged me."
 authors = ["david <david.m.berenstein@gmail.com>"]
 license = "Apache 2.0"
 readme = "README.md"
-packages = [{include = "mini_me"}]
+packages = [{include = "memory_palace"}]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
@@ -25,6 +25,9 @@ dateparser = "^1.1.8"
 farm-haystack = "^1.15.1"
 tqdm = "^4.65.0"
 
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.2.2"
 
 [build-system]
 requires = ["poetry-core"]
