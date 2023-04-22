@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+output.wav
+data/All mail Including Spam and Trash.mbox

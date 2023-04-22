@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "mini-me"
+version = "0.1.0"
+description = "The AI who shagged me."
+authors = ["david <david.m.berenstein@gmail.com>"]
+license = "Apache 2.0"
+readme = "README.md"
+packages = [{include = "mini_me"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+rich = "^13.3.3"
+fastapi = "^0.95.0"
+PyAudio = "^0.2.13"
+uvicorn = "^0.21.1"
+requests = "^2.28.2"
+numpy = "^1.24.2"
+easyocr = "^1.6.2"
+google-api-python-client = "^2.86.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^1.0.0"
+beautifulsoup4 = "^4.12.2"
+pandas = "^2.0.0"
+dateparser = "^1.1.8"
+farm-haystack = "^1.15.1"
+tqdm = "^4.65.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
