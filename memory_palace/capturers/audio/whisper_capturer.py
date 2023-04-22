@@ -120,8 +120,3 @@ class WhisperCapturer(threading.Thread):
                     "date": datetime.datetime.now(),
                 }
             )
-
-
-        # return Document(
-        #     response.json()
-        # )
