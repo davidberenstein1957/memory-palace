@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 output.wav
 data/All mail Including Spam and Trash.mbox
+data/*
+data\
+data/

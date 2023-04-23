@@ -6,6 +6,8 @@ from typing import Union
 
 from haystack import Document
 
+from memory_palace.processors.haystack_pipelines import str_indexing_pipeline
+
 SLEEP_INTERVAL = 60
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +32,13 @@ class HaystackProcessor(threading.Thread):
         while self.running:
             documents_batch = []
 
-            while not self.document_queue.empty():
+            while ((not self.document_queue.empty()) and (len(documents_batch) < 1000)):
                 item = self.document_queue.get()
                 documents_batch.append(item)
 
             if len(documents_batch) > 0:
                 _LOGGER.info(f"Processing {len(documents_batch)} documents")
+                str_indexing_pipeline.run(documents=documents_batch)
             time.sleep(SLEEP_INTERVAL)
 
 

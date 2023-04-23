@@ -4,7 +4,7 @@ services:
   whisper:
     image: onerahmet/openai-whisper-asr-webservice:latest
     environment:
-      - ASR_MODEL=base # tiny, base, small, medium, large, large-v1 and large-v2
+      - ASR_MODEL=small # tiny, base, small, medium, large, large-v1 and large-v2
     ports:
       - "9000:9000"
   elasticsearch:
@@ -17,7 +17,7 @@ services:
       - cluster.routing.allocation.disk.threshold_enabled=false
       - xpack.security.enabled=false
     ulimits:
-      memlock:  
+      memlock:
         soft: -1
         hard: -1
     networks:

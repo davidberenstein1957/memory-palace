@@ -7,6 +7,7 @@ import shutil
 import threading
 import uuid
 import wave
+from pathlib import Path
 
 import pyaudio
 import requests
@@ -21,12 +22,11 @@ RECORD_SECONDS = 10
 tmp_dir = "tmp_data/audio/whisper_capturer"
 WAVE_OUTPUT_FILENAME = "output.wav"
 
-
+THREADING_LOCK = threading.Lock()
 
 class AudioCapturer(threading.Thread):
     def __init__(self) -> None:
         super().__init__()
-        self.writing_lock = threading.Lock()
         self.queue = queue.Queue()
         self.idx = 0
         self.running = False
@@ -53,33 +53,43 @@ class AudioCapturer(threading.Thread):
             stream.close()
             self.audio.terminate()
 
-            # save raw audio as WAV file
             # acquire the lock
-            self.writing_lock.acquire()
-            # open file for appending
-            file = f"{tmp_dir}{uuid.uuid4()}.wav"
+            THREADING_LOCK.acquire()
+
+            # save raw audio as WAV file
+            file = f"{tmp_dir}/{uuid.uuid4()}.wav"
             waveFile = wave.open(file, 'wb')
             waveFile.setnchannels(CHANNELS)
             waveFile.setsampwidth(self.audio.get_sample_size(FORMAT))
             waveFile.setframerate(RATE)
             waveFile.writeframes(b''.join(frames))
             waveFile.close()
+
             # release the lock
-            self.writing_lock.release()
+            THREADING_LOCK.release()
 
             self.queue.put(file)
 
     def stop(self):
+        # acquire the lock
+        THREADING_LOCK.acquire()
+
         if not os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
+
+        # release the lock
+        THREADING_LOCK.release()
+
         self.running = False
         self.join()
 
 class WhisperCapturer(threading.Thread):
     def __init__(self, processor, type="audio", subtype="whisper") -> None:
-
-        # Path(tmp_dir).mkdir(parents=True, exist_ok=True)
         super().__init__()
+        # acquire the lock
+        THREADING_LOCK.acquire()
+        Path(tmp_dir).mkdir(parents=True, exist_ok=True)
+        THREADING_LOCK.release()
         self.audio_capturer = AudioCapturer()
         self.audio_capturer.start()
         self.processor = processor
@@ -102,9 +112,17 @@ class WhisperCapturer(threading.Thread):
 
     def process_file(self, file: str):
         url = "http://localhost:9000/asr?task=transcribe&output=json&language=en&method=faster-whisper&encode=true"
+
+        # acquire the lock
+        THREADING_LOCK.acquire()
+
         with open(file, 'rb') as f:
             files = {'audio_file': (file, f)}
             response = requests.post(url, files=files)
+
+        # release the lock
+        THREADING_LOCK.release()
+
         document = self.response_to_document(response)
         if document is not None:
             self.processor.add_documents(document)
@@ -112,6 +130,12 @@ class WhisperCapturer(threading.Thread):
     def response_to_document(self, response):
         json_payload = response.json()
         if json_payload['text']:
+            text = json_payload['text'].strip()
+            issues = ["Thank you for watching.", "Thanks for watching!", "Thanks for watching.", "Thanks for watching.", "Thank you very much.", "You", "you", "thank you", "thank you.", "Thank you for watching!"]
+            if text in issues:
+                return None
+            else:
+                print(text)
             return Document(
                 content=json_payload['text'].strip(),
                 meta={

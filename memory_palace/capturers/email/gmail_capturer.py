@@ -1,3 +1,4 @@
+import logging
 import mailbox
 import threading
 
@@ -5,17 +6,13 @@ import dateparser
 from bs4 import BeautifulSoup
 from haystack import Document
 from tqdm import tqdm
-from memory_palace.processors.haystack_processor import HaystackProcessor
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class GmailCapturer(threading.Thread):
-    def __init__(self, processor = None, type="audio", subtype="whisper") -> None:
+    def __init__(self, processor, type="audio", subtype="whisper") -> None:
         super().__init__()
-        if processor is None:
-            processor = HaystackProcessor()
         self.processor = processor
         self.type = type
         self.subtype = subtype
@@ -24,7 +21,7 @@ class GmailCapturer(threading.Thread):
     def run(self):
         self.running = True
         while self.running:
-            #TODO: implement
+            pass
 
     def stop(self):
         self.running = False
@@ -32,8 +29,8 @@ class GmailCapturer(threading.Thread):
 
     def mbox_to_documents(self, path_to_mbox: str) -> str:
         mbox = mailbox.mbox(path_to_mbox)
-        documents = [self.message_to_document(message) for message in tqdm(mbox, desc="Converting mbox to documents", total=len(mbox))]
-        return documents
+        for message in tqdm(mbox, desc="Converting mbox to documents", total=len(mbox)):
+            self.processor.document_queue.put(self.message_to_document(message))
 
 
     def message_to_document(self, message):
@@ -41,7 +38,9 @@ class GmailCapturer(threading.Thread):
         subject = message['subject']
         _from = message['from']
         _to = message['to']
-        data = dateparser.parse(message['date'])
+        date = message['date']
+        if isinstance(date, str):
+            date = dateparser.parse(message['date'])
         body = self.get_message_body(message)
         if body is None:
             print("ERROR")
