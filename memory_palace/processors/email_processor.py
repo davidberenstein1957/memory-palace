@@ -1,5 +1,6 @@
 import logging
 import mailbox
+import queue
 import threading
 
 import dateparser
@@ -7,13 +8,16 @@ from bs4 import BeautifulSoup
 from haystack import Document
 from tqdm import tqdm
 
+from memory_palace.indexers import HaystackIndexer
+
 _LOGGER = logging.getLogger(__name__)
 
 
-class GmailCapturer(threading.Thread):
-    def __init__(self, processor, type="audio", subtype="whisper") -> None:
+class EmailProcessor(threading.Thread):
+    def __init__(self, indexer: HaystackIndexer, type="audio", subtype="whisper") -> None:
         super().__init__()
-        self.processor = processor
+        self.indexer = indexer
+        self.queue = queue.Queue()
         self.type = type
         self.subtype = subtype
         self.running = False
@@ -22,7 +26,10 @@ class GmailCapturer(threading.Thread):
         _LOGGER.info("Started Runing...")
         self.running = True
         while self.running:
-            pass
+            while not self.queue.empty():
+                self.indexer.queue.put(
+                    self.message_to_document(self.queue.get())
+                )
 
     def stop(self):
         _LOGGER.info("Stopped Running.")
@@ -32,8 +39,8 @@ class GmailCapturer(threading.Thread):
     def mbox_to_documents(self, path_to_mbox: str) -> str:
         _LOGGER.info("Started converting mbox to documents...")
         mbox = mailbox.mbox(path_to_mbox)
-        for message in tqdm(mbox, desc="Converting mbox to documents", total=len(mbox)):
-            self.processor.document_queue.put(self.message_to_document(message))
+        for message in tqdm(mbox, desc="Converting mbox to documents"):
+            self.indexer.queue.put(self.message_to_document(message))
 
 
     def message_to_document(self, message):

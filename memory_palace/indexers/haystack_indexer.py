@@ -6,12 +6,12 @@ from typing import Union
 
 from haystack import Document
 
-from memory_palace.processors.haystack_pipelines import str_indexing_pipeline
+from memory_palace.pipelines.haystack_pipelines import str_indexing_pipeline
 
 SLEEP_INTERVAL = 60
 _LOGGER = logging.getLogger(__name__)
 
-class HaystackProcessor(threading.Thread):
+class HaystackIndexer(threading.Thread):
     _instance_lock = threading.Lock()
     _instance = None
 
@@ -25,15 +25,15 @@ class HaystackProcessor(threading.Thread):
     def __init__(self) -> None:
         super().__init__()
         self.running = False
-        self.document_queue = queue.Queue()
+        self.queue = queue.Queue()
 
     def run(self):
         self.running = True
         while self.running:
             documents_batch = []
 
-            while ((not self.document_queue.empty()) and (len(documents_batch) < 1000)):
-                item = self.document_queue.get()
+            while ((not self.queue.empty()) and (len(documents_batch) < 1000)):
+                item = self.queue.get()
                 documents_batch.append(item)
 
             if len(documents_batch) > 0:
@@ -50,4 +50,4 @@ class HaystackProcessor(threading.Thread):
         if isinstance(documents, Document):
             documents = [documents]
         for document in documents:
-            self.document_queue.put(document)
+            self.queue.put(document)
